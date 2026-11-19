@@ -1,0 +1,147 @@
+<title>Hexball Tactics</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+%%HEAD%%
+<style>
+%%FONTS%%
+%%CSS%%
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <button class="hexfc" id="toMenu" aria-label="Main menu">
+      <svg viewBox="-6 -6 212 212" aria-hidden="true">
+        <polygon class="lg-pitch" points="100,-3.46 189.6,48.27 189.6,151.73 100,203.46 10.4,151.73 10.4,48.27"/>
+        <polygon class="lg-ink" points="100,0 186.6,50 186.6,150 100,200 13.4,150 13.4,50"/>
+        <circle class="lg-ball" cx="100" cy="38" r="19"/>
+        <polygon class="lg-patch" points="100,28 108.66,33 108.66,43 100,48 91.34,43 91.34,33"/>
+        <text class="fc-hex" x="100" y="128" text-anchor="middle">HEX</text>
+        <text class="fc-fc" x="100" y="178" text-anchor="middle">FC</text>
+      </svg>
+    </button>
+    <div class="score" id="score"></div>
+    <div class="turnno" id="status"></div>
+  </header>
+  <main class="layout">
+    <section class="boardWrap">
+      <div id="spin"><svg id="board" xmlns="http://www.w3.org/2000/svg" aria-label="Hex pitch">
+        <defs>
+          <marker id="aW" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0L10,5L0,10z" fill="#fff"/></marker>
+          <marker id="aY" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto"><path d="M0,0L10,5L0,10z" fill="#f2c14e"/></marker>
+          <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0L10,5L0,10z" fill="#ff6170"/></marker>
+        </defs>
+        <g id="pitch"></g><g id="hexes"></g><g id="hl"></g><g id="ov"></g><g id="toks"></g><g id="ovTop"></g><g id="fx"></g>
+      </svg></div>
+      <div id="movedBadge" class="moved-badge" hidden></div>
+      <button id="dangerBtn" class="dz-btn" aria-label="Danger zone" title="Danger zone" aria-pressed="false" hidden><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 L15 14 H1 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 6v3.5M8 11.6v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+      <div id="banner" class="banner"></div>
+      <div id="pop" class="pop" hidden></div>
+      <div id="duel" class="duel" hidden></div>
+      <div id="bar" class="abar" hidden></div>
+    </section>
+    <aside class="side">
+      <div class="card" id="pcard" hidden></div>
+      <div class="card" id="panel"></div>
+      <details class="card more" id="more">
+        <summary>More</summary>
+        <div class="mo-opts">
+          <div class="mo-row">
+            <button class="btn" id="back1">Go back one turn</button>
+            <button class="btn" id="rewind">Retry my last attack</button>
+          </div>
+          <label class="switch"><input type="checkbox" id="sameDice"><span>Same dice <small>going back keeps the CPU's choices and the dice rolls; play it the same way and it ends the same way</small></span></label>
+          <label class="switch"><input type="checkbox" id="winAll"><span>Win all duels <small>practice: you win every contest and duel (keeper saves and shot accuracy still roll)</small></span></label>
+          <button class="btn" id="toMenu2">Main menu</button>
+        </div>
+        <h3 class="feed-h">Match feed</h3>
+        <div id="feed" class="feed"></div>
+        <details class="sub techlog"><summary>Technical log</summary>
+          <div class="loghead"><span class="hint" style="margin:0">For copying to Claude</span><span><button class="mini" id="copyState">Copy state</button> <button class="mini" id="loadState">Load state</button></span></div>
+          <ol id="log" class="glog"></ol>
+        </details>
+        <details class="how sub"><summary>How a turn works</summary><ul>
+        <li><b>Attack.</b> Plan the whole turn at once: one pass or shot (two after a ground pass), and up to 3 players moving. A dribble counts as one of the 3. So: dribble then pass or shoot, or pass and the receiver dribbles on. <b>Ground pass vs lob:</b> a ground pass is easier to cut out, but the receiver plays it first time and can pass or shoot once more; a lob goes over defenders but he has to control it, and that's the turn's kick. One player can move twice (the second move up to 2 hexes) and is tired next time (−1 hex).</li>
+        <li><b>The pass or shot</b> is one of: a pass to a teammate, a through ball into space, Give &amp; Go (the passer runs up to 4 hexes for the return), the Cross card, or a shot. A pass to a runner is held until it will arrive with him; a through ball goes now and waits in the space. Give &amp; Go and Cross rest for your next turn. Cross: from the outer two columns to a teammate in the box, who finishes first time (lob = header, low = shot).</li>
+        <li><b>Playback.</b> Players move 1 hex a frame, ground passes 3, lobs land after 3 frames, shots go straight away. When planning you go around defenders; once play runs, a defender who steps into a run can't stop it (a dribbler gets a 1v1).</li>
+        <li><b>Defence.</b> Prepare: once the attack is revealed (players, not the plan), move 2 players 1 hex each (the keeper counts). Step onto a loose ball and it's yours. React: every 2 frames you get a pause: mark one attacker (he's followed goal side for free) and send up to 3 defenders up to 2 hexes each, with 5 steps at the first pause and 2 plus whatever you saved after that (max 3). Undo takes back a move or mark before Go.</li>
+        <li><b>Winning the ball.</b> A defender only contests the ball on a hex when it gets there: in a pass lane 40%, on the receiver 55%, on a dribbler about 45%. A defender who wins it clears it 60% of the time in his own box (25% elsewhere): it flies 3–4 hexes upfield and play stops. Whoever wins the ball has to bring players beyond the other side's last outfield player back level with him (onside).</li>
+        <li><b>The keeper</b> stays in his box and uses his hands: he claims a pass to or through his hex (75%, 65% in the air), smothers a dribbler on his hex (55%) and rushes at one who comes next to him (30%). Get past him and he's out of the play. After a save or goal kick, attackers step out of his box.</li>
+        <li><b>Shooting.</b> Closer and more central = easier to hit the target; tight angles and the far post from wide are hard. Defenders next to you put you off and can block; one in the line of your shot blocks that side. The keeper saves most in line with your aim and less a column or two away, and closes the angle when he's right on top of you. A keeper behind you can't save. Tap ⓘ on the goal for the numbers.</li>
+        <li>Ring colour shows rarity. Tap any player for his card. First to 3 goals wins.</li>
+      </ul></details>
+      </details>
+    </aside>
+  </main>
+</div>
+
+<div class="overlay" id="start">
+  <div class="ocard start">
+    <svg class="logo" viewBox="-6 -6 212 212" role="img" aria-label="Hexball">
+      <polygon class="lg-pitch" points="100,-3.46 189.6,48.27 189.6,151.73 100,203.46 10.4,151.73 10.4,48.27"/>
+      <polygon class="lg-edge" points="100,0 186.6,50 186.6,150 100,200 13.4,150 13.4,50"/>
+      <path class="lg-ink" transform="translate(100 102) scale(0.8) translate(-100 -100)" d="M13.4,66 V134 M13.4,100 H37.4 M37.4,66 V134
+        M48.93,117 H68.93 A10,17 0 0 0 48.93,117 A10,17 0 0 0 67.12,126.75
+        M80.47,100 L100.47,134 M100.47,100 L80.47,134
+        M112,66 V134 M112,117 A10,17 0 0 1 132,117 A10,17 0 0 1 112,117
+        M163.53,100 V134 M163.53,117 A10,17 0 0 0 143.53,117 A10,17 0 0 0 163.53,117
+        M175.07,66 V134 M186.6,66 V134"/>
+      <circle class="lg-ball" cx="100" cy="30" r="10"/>
+      <polygon class="lg-patch" points="100,25 104.33,27.5 104.33,32.5 100,35 95.67,32.5 95.67,27.5"/>
+    </svg>
+    <div class="st-vs" role="group" aria-label="Opponent"><button data-vs="cpu" aria-pressed="true">vs CPU</button><button data-vs="hot" aria-pressed="false">vs Friend</button></div>
+    <div class="st-opts">
+      <label class="sel"><span>Team size</span><select id="stSize"><option value="7" selected>7v7</option><option value="6">6v6</option><option value="5">5v5</option><option value="m:sla-ars">Slavia v Arsenal · 7v7</option></select></label>
+      <label class="sel"><span>Pitch</span><select id="stPitch"><option value="classic" selected>9 × 13 · goal 3</option><option value="wide">10 × 15 · goal 4</option></select></label>
+      <label class="sel"><span>Reshape</span><select id="stShape"><option value="on" selected>On</option><option value="off">Off</option></select></label>
+      <label class="sel"><span>You start</span><select id="stFirst"><option value="R" selected>Random</option><option value="H">Attacking</option><option value="A">Defending</option></select></label>
+    </div>
+    <button class="btn st-cont" id="stCont" hidden></button>
+    <button class="btn main st-go" id="stGo">Kick off</button>
+    <details class="st-more">
+      <summary>More</summary>
+      <div class="st-sec">
+        <h3>Load state</h3>
+        <button class="btn" id="loadState2">Paste a saved state</button>
+      </div>
+      <div class="st-sec">
+        <h3>Presets</h3>
+        <button class="preset" data-scn="attackOn" data-scm="cpu"><b>Attack in progress</b><span>Northgate in your half, you defend · 7v7</span></button>
+        <button class="preset" data-scn="wingCross" data-scm="defend"><b>Right-wing cross · defend it</b><span>The attack replays the same plan each time · 7v7</span></button>
+        <button class="preset" data-scn="wingCross" data-scm="both"><b>Right-wing cross · both sides</b><span>Same position, you play both teams · 7v7</span></button>
+      </div>
+    </details>
+  </div>
+</div>
+
+<div class="overlay solid" id="squad" hidden><div class="ocard squad"></div></div>
+
+<div class="overlay" id="statebox" hidden>
+  <div class="ocard">
+    <div class="kicker sb-title">Game state</div>
+    <textarea spellcheck="false" style="width:100%;height:220px;margin-top:8px;font:12px/1.35 ui-monospace,Menlo,monospace;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px"></textarea>
+    <p class="hint sb-err" style="color:var(--danger)"></p>
+    <div class="row"><button class="btn" data-sb="close">Close</button><button class="btn main" data-sb="load">Load</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="scnend" hidden>
+  <div class="ocard">
+    <div class="kicker">Scenario result</div>
+    <div class="gate-team se-res"></div>
+    <p class="hint se-hist"></p>
+    <p class="hint">Same dice: the same choices give the same rolls. New dice: same position, fresh luck.</p>
+    <div class="row"><button class="btn main" data-se="same">Again · same dice</button><button class="btn" data-se="new">Again · new dice</button><button class="btn" data-se="menu">Menu</button></div>
+  </div>
+</div>
+
+<div class="overlay solid" id="gate" hidden>
+  <div class="ocard">
+    <div class="kicker">Pass the device</div>
+    <div class="gate-team" id="gateTeam"></div>
+    <p class="hint" id="gateRole"></p>
+    <div class="row"><button class="btn main" id="gateGo">I'm ready</button></div>
+  </div>
+</div>
+
+<script>
+%%JS%%
+</script>

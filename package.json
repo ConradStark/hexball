@@ -1,0 +1,29 @@
+{
+  "name": "hexball",
+  "private": true,
+  "type": "module",
+  "description": "Hexball Tactics: turn-based tactical football on hexes (single page, installable web app)",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node build.mjs && node tools/serve.mjs",
+    "serve": "node tools/serve.mjs",
+    "dev": "node tools/dev.mjs",
+    "quick": "node test/run.mjs quick",
+    "test": "node test/run.mjs",
+    "replay": "node build.mjs && node test/replay.mjs",
+    "sim": "node build.mjs && node test/sim.mjs",
+    "format": "prettier --write \"src/*.js\" src/styles.css \"test/*.mjs\" build.mjs",
+    "unused": "node tools/unused.mjs && node tools/unused-css.mjs",
+    "shots": "node build.mjs && node test/shots.mjs",
+    "mix": "node build.mjs && node test/mix.mjs",
+    "keeper": "node build.mjs && node test/keeper.mjs",
+    "defence": "node build.mjs && node test/defence.mjs",
+    "rhythm": "node build.mjs && node test/rhythm.mjs",
+    "bundle": "node tools/bundle.mjs",
+    "situations": "node build.mjs && node tools/shot-situations.mjs"
+  },
+  "devDependencies": {
+    "acorn": "8.12.1",
+    "prettier": "3.3.3"
+  }
+}
