@@ -14,7 +14,7 @@ Plain JavaScript, no framework and no bundler: the modules in `src/` are concate
 rules as they stand and the reasoning behind them are in [design-notes.md](design-notes.md).
 
 ```
-npm install                 # prettier and acorn
+npm install                 # prettier, acorn, Playwright
 npx playwright install chromium   # the browser the test suites drive
 npm start                   # build and play at http://localhost:8080
 npm run dev                 # rebuild on every save (run `npm run serve` alongside it)
@@ -22,8 +22,6 @@ npm run quick               # ~15 s: unit tests, behaviour lock, game-screen UI
 npm test                    # everything, before opening a pull request
 npm run format              # prettier
 ```
-
-If you install Playwright with npm (`npm install --no-save playwright`), the test scripts pick it up.
 
 ## Pull requests
 

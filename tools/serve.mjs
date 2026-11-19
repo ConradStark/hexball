@@ -29,7 +29,10 @@ http
     fs.readFile(file, (err, body) => {
       if (err) return res.writeHead(404).end('not found');
       // no-cache so a rebuild shows on reload; the service worker does the offline caching
-      res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
+      res.writeHead(200, {
+        'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream',
+        'Cache-Control': 'no-cache',
+      });
       res.end(body);
     });
   })
