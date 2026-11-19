@@ -105,5 +105,6 @@ Anything that animates or changes `S` belongs in playback/game; anything that dr
 
 ## Publishing
 
-Publish `dist/hexball.html` to the "Hexball Tactics" artifact only after `npm test` passes. Then save a source bundle to
+Publish `dist/hexball.html` to the "Hexball Tactics" artifact only after `npm test` passes (URL and exact steps in
+[CLAUDE.md](CLAUDE.md)). Then save a source bundle to
 the project (`claude/hexball-src-vX.txt`, whole repo) and add a line to `claude/design-notes.md`.
