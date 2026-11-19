@@ -51,7 +51,11 @@ turn. A finished match is cleared.
 - `node tools/icons.mjs` re-renders the app icons from the start-screen logo (needs Playwright).
 - Design history and the rules as they stand: `design-notes.md`. Code guide: `ARCHITECTURE.md`.
 
-## Fonts
+## Contributing
 
-Barlow, Barlow Condensed and Bitter (SIL Open Font License 1.1), latin subsets from Fontsource, embedded in the page.
-Licences in `assets/fonts/`.
+Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+[MIT](LICENSE). The fonts are not covered by it: Barlow, Barlow Condensed and Bitter are under the SIL Open Font
+License 1.1 (latin subsets from Fontsource, embedded in the page); licences in `assets/fonts/`.

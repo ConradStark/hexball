@@ -1,6 +1,8 @@
 {
   "name": "hexball",
   "private": true,
+  "license": "MIT",
+  "repository": "github:ConradStark/hexball",
   "type": "module",
   "description": "Hexball Tactics: turn-based tactical football on hexes (single page, installable web app)",
   "scripts": {
