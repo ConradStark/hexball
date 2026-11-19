@@ -29,6 +29,8 @@ export const ORDER = [
 ];
 
 const SPEED = 'let SPEED = 1;';
+// shown under More, so you can tell which build a phone has installed; bump it in package.json on each release
+const VERSION = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
 
 // v2.66: the fonts live in the page (base64 woff2, latin only) so it works with no connection. SIL OFL fonts:
 // Barlow, Barlow Condensed (Jeremy Tribby), Bitter (Huerta Tipográfica); files from @fontsource, see assets/fonts.
@@ -69,6 +71,7 @@ export function build() {
     fs
       .readFileSync('src/index.html', 'utf8')
       .replace('%%HEAD%%', () => head)
+      .replace('%%VERSION%%', () => VERSION)
       .replace('%%FONTS%%', () => fonts)
       .replace('%%CSS%%', () => fs.readFileSync('src/styles.css', 'utf8'))
       .replace('%%JS%%', () => `(() => {\n${body}\n})();`);

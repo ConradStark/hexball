@@ -14,7 +14,8 @@ link the user plays from stops getting updates. (Older "Hexball Tactics" artifac
 
 1. Edit `src/` (never `dist/`: it is build output and not committed).
 2. `npm run build` → writes `dist/hexball.html` (the artifact page) plus the test, offline and PWA builds.
-3. `npm run quick` while working; `npm test` before publishing. If play changed on purpose, run
+3. `npm run quick` while working; `npm test` before publishing (the suites are out of date: see "Tests need repair"
+   in design-notes.md before trusting a failure). If play changed on purpose, run
    `npm run replay -- record` first.
 4. Publish with the Artifact tool:
    - In a new thread, first `action: "read"` with the URL above (the tool refuses a publish to an artifact this
