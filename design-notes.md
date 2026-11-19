@@ -4,7 +4,7 @@ Current rules, live decisions and ideas. The full version-by-version log (v1.4�
 is archived in `claude/design-history.md`.
 
 ## Where things are
-- **Live game:** "Hexball Tactics" artifact = **v2.66** (numbering v2.x): https://claude.ai/code/artifact/c984c954-d550-4410-b381-7a3959172257 — always publish to this URL (Artifact tool, `url` + `file_path` = `dist/hexball.html`).
+- **Live game:** "Hexball Tactics" artifact = **v2.66** (numbering v2.x): https://claude.ai/artifact/KibYkXqZ31B5LRBT4Zu4Ag (since 19 Nov 2026; the c984c954 link is retired) — always publish to this URL. Steps in `CLAUDE.md`.
 - **Design canvas:** "Hexball Look & Feel" (https://claude.ai/artifact/Gqmv496XymBv84RHjbDGkC) — every mock round so far: board directions, decision visuals, shot cone, chalk/pitch/header, pass arrows, tap-a-space window, pitch formats. New mocks go on it as a new row with a title note.
 - **Shot Situations** artifact: shot set-ups with odds per aim spot vs real-world xG ballparks (`npm run situations -- outDir`).
 - **Playable old builds** (open the .html): v0.4 · v0.9.3 · v0.10 · v1.0 · v1.4 · v1.13 · v1.35.
