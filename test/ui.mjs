@@ -29,8 +29,7 @@ async function twoSteps(page) {
   await tap(page, 7, 5);
   await tap(page, 4, 6);
   await tap(page, 7, 5);
-  await page.click('[data-a="sp"][data-v="pass"]');
-  await page.click('[data-a="pk"][data-v="ground"]');
+  await page.click('[data-a="sp"][data-v="pass"]'); // v2.30: ground or air goes by distance, no second choice
 }
 // play until it's our plan again or a defence pause
 async function playUntil(page, done) {
@@ -74,7 +73,7 @@ const tests = {
     assert.ok(Math.abs(g.mid) < 4, `score off centre by ${g.mid}px`);
     assert.ok(g.right < 2, `turn block ${g.right}px from the right edge`);
   },
-  async 'tap a space: Through / Pass / Cross window below the hex, then ground or air'(page) {
+  async 'tap a space (v2.30, v2.32): Through / Pass window below the hex; ground or air by distance'(page) {
     await attackFirst(page);
     await tap(page, 4, 6); // #9 on the ball
     await tap(page, 5, 3); // empty space ahead of him, beyond his dribble
@@ -87,20 +86,16 @@ const tests = {
       return { popTop: p.top, hexBottom: h.bottom };
     });
     assert.ok(g.popTop >= g.hexBottom - 2, `window starts ${g.hexBottom - g.popTop}px above the hex's bottom edge`);
-    // empty space: Pass needs a runner, Cross isn't on from the middle; tapping them explains why
+    // empty space: Pass needs a runner; tapping it explains why. v2.32: two choices at most, and no Cross from the middle
     assert.equal(await page.$eval('[data-a="sp"][data-v="pass"]', (e) => e.getAttribute('aria-disabled')), 'true');
     await page.click('[data-a="sp"][data-v="pass"]', { force: true }); // greyed out (aria-disabled) but tappable
     assert.match(await page.$eval('#pop', (e) => e.textContent), /plan a run to this hex first/);
-    await page.click('[data-a="sp"][data-v="cross"]', { force: true });
-    assert.match(await page.$eval('#pop', (e) => e.textContent), /isn't out wide/);
-    assert.ok((await page.$$('#hl .h-cross')).length > 6, 'crossing areas not highlighted');
-    assert.match(await page.$eval('#hl', (e) => e.textContent), /Cross from these areas/);
-    // through ball → ground / in the air → into the plan
+    assert.equal(await page.$('[data-a="sp"][data-v="cross"]'), null);
+    // through ball → straight into the plan (v2.30: 3 hexes away, so along the ground)
     await page.click('[data-a="sp"][data-v="through"]');
-    assert.equal(await page.$$eval('#pop [data-a="pk"]', (l) => l.length), 2);
-    await page.click('[data-a="pk"][data-v="ground"]');
     const a = await H(page, () => window.__hexball.S.plan[0]);
     assert.equal(a.type, 'pass');
+    assert.equal(a.kind, 'ground');
     assert.equal(a.to, null);
     assert.deepEqual(a.target, [5, 3]);
   },
@@ -113,7 +108,10 @@ const tests = {
     const plan = () => H(page, () => window.__hexball.S.plan.map((a) => a.type + (a.ball ? '*' : '')).join(','));
     await tap(page, 4, 5); // dribble one hex
     assert.equal(await plan(), 'move*');
-    await tap(page, 4, 5); // again: a pass into that space instead
+    // v2.34: after a dribble nothing stays selected: tap him to pick him, then his hex again = a pass into that space
+    await tap(page, 4, 5);
+    assert.equal(await H(page, () => window.__hexball.S.ui.sel), 'H9');
+    await tap(page, 4, 5);
     assert.equal(await plan(), '');
     assert.ok(await page.isVisible('#pop [data-a="sp"]'), 'the space window is open');
     assert.deepEqual(await H(page, () => window.__hexball.S.ui.tB), [4, 5]);
@@ -250,9 +248,14 @@ const tests = {
     assert.ok(r.wide < 0, `bulges left of the line (${r.wide})`);
     assert.ok(r.mid > 0, `central: bends out to the corner side (${r.mid})`);
   },
-  async 'prepare: stepping onto the loose ball wins it at once (no Go)'(page) {
-    await page.selectOption('#stFirst', 'A');
-    await page.click('#stGo');
+  async 'prepare (old saves): stepping onto the loose ball wins it at once (no Go)'(page) {
+    // v2.39: Prepare is off the start screen; it only comes back with an old saved state, so switch to it directly
+    await H(page, () => {
+      const h = window.__hexball;
+      document.querySelector('#start').hidden = true;
+      h.setDef('prepare');
+      h.newGame('cpu', 'A');
+    });
     await page.waitForFunction(() => window.__hexball.S.frame && window.__hexball.S.frame.prep, null, {
       timeout: 30000,
     });
@@ -420,10 +423,14 @@ const tests = {
     await playUntil(page, () => window.__hexball.S.glog.some((l) => / A1 v H|WON A1|recv H10/.test(l.t)));
     const g = await H(page, () => window.__hexball.S.glog.map((l) => l.t).join('\n'));
     assert.match(g, /pass\/star A1 v H\S+ p 75%/, g.slice(-600));
+    // v2.61's reach (20%) is for a ball going past next to him, not one on its way through his hex
+    assert.doesNotMatch(g, /pass\/star A1 v H\S+ p 20%/);
   },
 };
 let failed = 0;
+const only = process.argv[2]; // node test/ui.mjs <part of a test name> → just the matching tests
 for (const [name, fn] of Object.entries(tests)) {
+  if (only && !name.includes(only)) continue;
   const { page, errors } = await open();
   try {
     await fn(page);
@@ -431,7 +438,7 @@ for (const [name, fn] of Object.entries(tests)) {
     console.log('  ok  ', name);
   } catch (e) {
     failed++;
-    console.log('  FAIL', name, '\n       ', e.message.split('\n')[0], errors.join(' / '));
+    console.log('  FAIL', name, '\n       ', e.message.split('\n')[0], (e.stack.match(/test\/\w+\.mjs:\d+/) || [''])[0], errors.join(' / '));
   }
   await page.close();
 }

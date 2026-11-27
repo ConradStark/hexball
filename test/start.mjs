@@ -138,8 +138,8 @@ const tests = {
     await page.waitForFunction(() => window.__hexball.S.phase === 'react', null, { timeout: 10000 });
   },
   async 'defence Respond (v2.25): no Prepare, first window after frame 1; Anticipate; Press; Tackle timing game'(page) {
-    assert.equal(await page.$$eval('#stDef option', (o) => o.map((x) => x.value).join()), 'prepare,respond');
-    await page.selectOption('#stDef', 'respond');
+    // v2.39: Respond is the only defence on the start screen (no picker; old saves can still load Prepare)
+    assert.equal(await page.$('#stDef'), null);
     await page.selectOption('#stFirst', 'A');
     await H(page, () => window.__hexball.setAutoGo(0));
     // their kick-off varies: start again until the ball is at a man's feet at the first window (for the challenge)
@@ -151,6 +151,7 @@ const tests = {
       });
       if (await H(page, () => !!window.__hexball.S.ball && !window.__hexball.S.fl)) break;
     }
+    assert.equal(await H(page, () => window.__hexball.DEF_MODE), 'respond');
     const fr = await H(page, () => ({ prep: !!window.__hexball.S.frame.prep, k: window.__hexball.S.frame.k }));
     assert.equal(fr.prep, false, 'no Prepare window');
     assert.equal(fr.k, 1, 'the first window comes after frame 1');
@@ -160,11 +161,14 @@ const tests = {
       return Object.keys(S.pos).find((x) => x[0] === 'H' && x !== 'H1' && x !== S.beaten && x !== S.out);
     });
     const [dc, dr] = await H(page, (d) => window.__hexball.S.pos[d], d);
+    // v2.43: defending is on the board: tap picks him, tap him again for Anticipate
+    await page.click(`[data-k="${dc},${dr}"]`);
     await page.click(`[data-k="${dc},${dr}"]`);
     assert.ok(await page.isVisible('[data-a="antic"]'));
     await page.click('[data-a="antic"]');
     assert.equal(await H(page, () => window.__hexball.S.read && window.__hexball.S.read.pid), d);
-    assert.equal((await page.$$('#hl .h-read')).length, 1, 'v2.27: his own hex is shown');
+    // v2.54: a gold dashed ring on his own token (it moves with him), no hex fill
+    assert.equal((await page.$$('.tok.reading')).length, 1, 'v2.54: his token shows the read');
     assert.match(await page.$eval('#panel', (e) => e.textContent), /Reading: #/);
     await page.click('[data-a="dundo"]');
     assert.equal(await H(page, () => window.__hexball.S.read), null, 'Undo takes the read back');
@@ -183,26 +187,48 @@ const tests = {
     });
     assert.ok(c, 'set up a defender next to the man on the ball');
     {
-      await page.click(`[data-k="${c[0]},${c[1]}"]`);
+      // v2.43: pick the defender, then tap the man on the ball: Tackle / Press / Mark open next to him
+      const bh = await H(page, () => window.__hexball.S.pos[window.__hexball.S.ball]);
+      const challenge = async () => {
+        await page.click(`[data-k="${c[0]},${c[1]}"]`);
+        await page.click(`[data-k="${bh[0]},${bh[1]}"]`);
+      };
+      await challenge();
       assert.ok(await page.isVisible('[data-a="ctackle"]'));
       await page.click('[data-a="cpress"]');
       assert.equal(await H(page, () => window.__hexball.S.press.pid), 'H6');
-      await page.click(`[data-k="${c[0]},${c[1]}"]`);
+      await challenge();
       await page.click('[data-a="ctackle"]');
-      // the tackle timing game: a bar with the green zone; tap it
-      await page.waitForSelector('#duel .tg.tk', { timeout: 8000 });
-      const z = await page.$eval('#duel .tk-z', (e) => parseFloat(e.style.width));
-      assert.ok(z > 10 && z < 90, `zone ${z}%`);
-      await page.click('#duel');
-      await page.waitForFunction(() => /TACKLE|DUEL tackle/.test(window.__hexball.S.glog.map((l) => l.t).join('\n')), null, {
-        timeout: 8000,
-      });
+      // v2.45: the tackle is queued and goes in on Go; v2.35: no green-zone game, it's a normal contest, and
+      // v2.51: only a close one (35–65%) opens the duel mini-game
+      assert.equal(await H(page, () => window.__hexball.S.tkPend), 'H6');
+      await page.click('[data-a="rgo"]');
+      await page.waitForFunction(
+        () => {
+          const g = window.__hexball.S.glog.map((l) => l.t).join('\n');
+          if (/TACKLE H6|contest tackle H6|DUEL tackle H6/.test(g)) return true;
+          const d = document.querySelector('#duel');
+          if (d && !d.hidden) d.click(); // a close tackle: tap through the mini-game
+          return false;
+        },
+        null,
+        { timeout: 15000, polling: 100 },
+      );
     }
   },
   async 'defence Respond: a whole CPU-vs-CPU match plays out'(page) {
     await H(page, () => {
+      // seeded like replay match 0 (7v7, the CPU reads 9 times): an unseeded match sometimes has no read at all
+      let a = 1000;
+      Math.random = () => {
+        a = (a + 0x6d2b79f5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
       const h = window.__hexball;
       document.querySelector('#start').hidden = true;
+      h.setSize(7);
       h.setSpeed(200);
       h.setDef('respond');
       h.newGame('sim');
@@ -258,7 +284,7 @@ for (const [name, fn] of Object.entries(tests)) {
     console.log('  ok  ', name);
   } catch (e) {
     failed++;
-    console.log('  FAIL', name, '\n       ', e.message.split('\n')[0], errors.join(' / '));
+    console.log('  FAIL', name, '\n       ', e.message.split('\n')[0], (e.stack.match(/test\/\w+\.mjs:\d+/) || [''])[0], errors.join(' / '));
   }
   await page.close();
 }

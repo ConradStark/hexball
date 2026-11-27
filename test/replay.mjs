@@ -49,8 +49,9 @@ await Promise.all(
 // Rules every match must keep, whatever the dice (cheap checks on the logs).
 out.forEach((g, m) => {
   for (const t of g) {
+    // v2.25/v2.34 Respond (the only mode on the start screen since v2.39): windows after frames 1, 3, 5…
     const w = /^T\d+\.f(\d+) window \d+ closed/.exec(t);
-    if (w && +w[1] % 2) problems.push(`match ${m}: React window off the 2-frame clock: ${t}`);
+    if (w && !(+w[1] % 2)) problems.push(`match ${m}: React window off the 2-frame clock: ${t}`);
     // v2.11: one pass or shot a turn (runs and dribbles are free); the CPU once shot after its Give & Go
     const p = /^T\d+ PLAN (.*)$/.exec(t);
     if (p) {

@@ -118,15 +118,23 @@ test('shot zones: from the left wing the near post is easier than the far post',
 test('keeper: top corner is harder to save than bottom when guessed', () => {
   assert.ok(T.saveP(1, [4, 0], 'H', 3, 80) < T.saveP(4, [4, 0], 'H', 3, 80));
 });
-test('cross card: only from the flank, and rests the turn after use', () => {
-  const S = board({ H6: [0, 3], H10: [4, 4], H9: [4, 2] }, 'H6');
-  assert.ok(T.crossOK(S, 'H6', 'H9'));
-  assert.ok(!T.crossOK(S, 'H10', 'H9'));
+test('cross (v2.41): only a winger, only from the flank; Give & Go is the one card and rests the next turn (v2.32)', () => {
+  const S = board({ H6: [0, 3], H10: [0, 5], H9: [4, 2] }, 'H6');
+  assert.ok(T.crossOK(S, 'H6', 'H9'), 'winger out wide');
+  assert.ok(!T.crossOK(S, 'H10', 'H9'), 'a central midfielder out wide can\'t cross');
+  S.pos.H6 = [4, 4];
+  assert.ok(!T.crossOK(S, 'H6', 'H9'), 'not from the middle');
+  // the Cross is a normal option now: using it rests nothing
   S.plan = [{ type: 'cross', from: 'H6', to: 'H9', kind: 'lob', zone: 4, ball: true }];
   T.setCool();
   S.plan = [];
-  assert.ok(!T.cardOK('cross'));
+  assert.ok(T.cardOK('cross'));
   assert.ok(T.cardOK('gng'));
+  // a Give & Go rests for the team's next attacking turn
+  S.plan = [{ type: 'gng', from: 'H6', to: 'H10', ball: true }];
+  T.setCool();
+  S.plan = [];
+  assert.ok(!T.cardOK('gng'));
 });
 test('runner cap: 3 runners, only one may run twice', () => {
   const S = board({ H2: [2, 10], H5: [6, 10], H6: [1, 8], H8: [7, 8], H9: [4, 6] }, 'H9');
@@ -205,8 +213,9 @@ test('beaten after a turnover: no influence on a pass lane', () => {
   T.S.out = null;
 });
 
-test('runs: go through a defender who steps into the path; wait for a moving teammate to vacate the last hex', () => {
-  const S = board({ H9: [4, 8], H10: [4, 6], A4: [4, 7] }, null);
+test('runs: go through an opponent who steps into the path; wait for a moving teammate to vacate the last hex', () => {
+  // v2.39: only a defender or the keeper (Wall) stops a run; anyone else can be run through, so use a winger
+  const S = board({ H9: [4, 8], H10: [4, 6], A7: [4, 7] }, null);
   S.frameNo = 1;
   S.movers = [
     {
@@ -228,11 +237,25 @@ test('runs: go through a defender who steps into the path; wait for a moving tea
     },
   ];
   T.stepMovers();
-  same(S.pos.H9, [4, 7]); // shares the hex with A4 mid-run
+  same(S.pos.H9, [4, 7]); // shares the hex with A7 mid-run
   S.frameNo = 2;
   T.stepMovers();
   same(S.pos.H9, [4, 6]);
   same(S.pos.H10, [4, 5]);
+});
+
+test('Wall (v2.39): a run stops in front of a defender standing in its way; a dribble still goes at him', () => {
+  const S = board({ H9: [4, 8], A4: [4, 7] }, null);
+  S.frameNo = 1;
+  S.movers = [{ pid: 'H9', path: [[4, 8], [4, 7], [4, 6]], idx: 0 }];
+  T.stepMovers();
+  same(S.pos.H9, [4, 8]);
+  assert.ok(S.movers[0].done, 'the run is over');
+  const D = board({ H9: [4, 8], A4: [4, 7] }, 'H9');
+  D.frameNo = 1;
+  D.movers = [{ pid: 'H9', path: [[4, 8], [4, 7]], idx: 0, drib: true }];
+  T.stepMovers();
+  same(D.pos.H9, [4, 7]);
 });
 
 test('scattered pass: receiver with movement left steps onto it; a runner extends his run', () => {
@@ -297,31 +320,29 @@ test('react windows: 5 at the first, then 2 + unused (max 3)', () => {
   assert.equal(next(1), 3);
 });
 
-test('shot lane follows the aimed side: a blocker on the left lane only counts for left-side shots', () => {
+test('shot lane follows the aimed side (v2.31): a blocker on the left lane only counts for left-side shots', () => {
   const st = board({ H9: [4, 5], A4: [3, 3] }, 'H9');
   const left = T.shotEval(st, 'H9', 3), // bottom left
     right = T.shotEval(st, 'H9', 5); // bottom right
-  assert.ok(
-    left.th.some((t) => t.pid === 'A4'),
-    'blocks the left lane',
-  );
-  // v2.16: he's 2 hexes away on the goal side, so he still gets a smaller "close" chance on the other side
-  const r = right.th.find((t) => t.pid === 'A4'),
-    l = left.th.find((t) => t.pid === 'A4');
+  const l = left.th.find((t) => t.pid === 'A4');
+  assert.ok(l, 'blocks the left lane');
   assert.equal(l.tier, 'lane');
-  assert.equal(r.tier, 'close');
-  assert.ok(r.p0 < l.p0, 'smaller off his lane');
+  // v2.31: no "close" blocks any more: off his lane he blocks nothing
+  assert.equal(right.th.length, 0);
+  assert.equal(right.thr, 1);
+  assert.ok(left.thr < 1);
 });
 
-test('close defenders (v2.16): next to the shooter = pressure on target + a block on every aim spot', () => {
+test('close defenders (v2.16, v2.31): next to the shooter = pressure on target, but no block', () => {
   const free = T.shotEval(board({ H9: [4, 3] }, 'H9'), 'H9', 4),
     crowd = T.shotEval(board({ H9: [4, 3], A4: [3, 3], A3: [5, 3] }, 'H9'), 'H9', 4),
     behind = T.shotEval(board({ H9: [4, 3], A4: [4, 5] }, 'H9'), 'H9', 4);
   assert.equal(crowd.press, 2);
   assert.ok(Math.abs(free.acc - crowd.acc - 0.16) < 0.001, `${free.acc} ${crowd.acc}`);
-  assert.equal(crowd.th.filter((t) => t.tier === 'close').length, 2);
-  assert.ok(crowd.thr < 0.75 && free.thr === 1);
+  assert.equal(crowd.th.length, 0, 'beside him is not in the lane');
+  assert.equal(crowd.thr, 1);
   assert.equal(behind.th.length, 0, 'a defender 2 behind him blocks nothing');
+  assert.equal(behind.press, 0);
 });
 
 test('pressure (v2.22): only a defender level or goal side counts, not one right behind him', () => {
