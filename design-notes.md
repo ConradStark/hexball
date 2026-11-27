@@ -1,16 +1,17 @@
 # Hexball – design notes
 
 Current rules, live decisions and ideas. The full version-by-version log (v1.4–v1.35, with sim numbers and user quotes)
-is archived in `claude/design-history.md`.
+was archived in the old claude.ai project (`claude/design-history.md`), not in this repo.
 
 ## Where things are
-- **Live game:** "Hexball Tactics" artifact = **v2.66** (numbering v2.x): https://claude.ai/artifact/KibYkXqZ31B5LRBT4Zu4Ag (since 19 Nov 2026; the c984c954 link is retired) — always publish to this URL. Steps in `CLAUDE.md`.
+- **Code:** https://github.com/ConradStark/hexball — `main` is live; work on branches, merge by pull request. Code guide: `ARCHITECTURE.md`.
+- **Live game (installable app):** https://conradstark.github.io/hexball/ — every push to `main` deploys it (GitHub Pages).
+- **Artifact:** "Hexball Tactics" = **v2.66**: https://claude.ai/artifact/KibYkXqZ31B5LRBT4Zu4Ag (since 19 Nov; older Hexball Tactics artifacts are retired) — for checking a build on the phone before merging; steps in `CLAUDE.md`.
+- **Setting up a fresh checkout:** `npm install`, `npx playwright install chromium`, `npm start` to play, `npm test` to check. Since v2.26.2 the page carries `[hidden]{display:none!important}` itself (without it every hidden panel showed and the game was stuck on "Pass the device").
+- **Tests need repair (19 Nov):** `test/` last matched the game at v2.47; at v2.66 `npm test` has 18 failures (unit 4, ui 6, start 1, smoke 7) and `replay check` fails on the old Prepare-mode window clock. The failures checked so far are tests describing old rules (Respond default since v2.34, close blocks gone in v2.31, crosses winger-only since v2.41, dribble taps v2.28/v2.34), not game bugs. Until they're fixed, a red suite doesn't mean you broke something.
 - **Design canvas:** "Hexball Look & Feel" (https://claude.ai/artifact/Gqmv496XymBv84RHjbDGkC) — every mock round so far: board directions, decision visuals, shot cone, chalk/pitch/header, pass arrows, tap-a-space window, pitch formats. New mocks go on it as a new row with a title note.
 - **Shot Situations** artifact: shot set-ups with odds per aim spot vs real-world xG ballparks (`npm run situations -- outDir`).
 - **Playable old builds** (open the .html): v0.4 · v0.9.3 · v0.10 · v1.0 · v1.4 · v1.13 · v1.35.
-- **Source bundles** (unpack command on the first line): v1.4, v1.13, v1.35 (old era), **v2.27, v2.28, v2.34** (the whole repo: src, tests, tools, ARCHITECTURE.md, design-notes.md). Rotate on each release: keep v1.4, v1.13, v1.35 and the last 3 v2.x.
-- **Code guide:** `claude/hexball-architecture.md`.
-- **Starting a new chat:** unpack the newest `claude/hexball-src-v2.x.txt` into `hexball/`, `npm install`, `npm run build`, `npm run replay -- record`, `npm test`. Since v2.26.2 the page carries `[hidden]{display:none!important}` itself (publishing the raw file no longer adds it: without it every hidden panel showed and the game was stuck on "Pass the device").
 - **How the user likes to work:** mocks on the design canvas before changing the look ("show me examples before committing"); new rules as a start-screen option first when they're big (Pitch, Defence); phone-width screenshots of every UI change; CPU-vs-CPU sims for every rule change (numbers vs the last version); a Recent decisions line + source bundle per release.
 
 ## Recent sessions

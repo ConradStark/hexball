@@ -1,5 +1,6 @@
 {
   "name": "hexball",
+  "version": "2.66.0",
   "private": true,
   "license": "MIT",
   "repository": "github:ConradStark/hexball",
@@ -21,11 +22,11 @@
     "keeper": "node build.mjs && node test/keeper.mjs",
     "defence": "node build.mjs && node test/defence.mjs",
     "rhythm": "node build.mjs && node test/rhythm.mjs",
-    "bundle": "node tools/bundle.mjs",
     "situations": "node build.mjs && node tools/shot-situations.mjs"
   },
   "devDependencies": {
     "acorn": "8.12.1",
+    "playwright": "1.65.1",
     "prettier": "3.3.3"
   }
 }

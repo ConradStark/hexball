@@ -1,12 +1,14 @@
-# Hexball — architecture & maintenance guide (v2.34)
+# Hexball — architecture & maintenance guide (v2.66)
 
-Hexball is a turn-based tactical football prototype. It ships as **one self-contained HTML page** (the "Hexball Tactics"
-claude.ai artifact: inline CSS/JS, Google Fonts only). The source is small plain-script modules that the build
+Hexball is a turn-based tactical football prototype. It ships as **one self-contained HTML page** (inline CSS, JS and
+fonts; no network calls), published three ways: the installable web app on GitHub Pages (`dist/pwa`), a single
+download-and-open file (`dist/hexball-offline.html`) and the "Hexball Tactics" claude.ai artifact (`dist/hexball.html`). The source is small plain-script modules that the build
 concatenates in a fixed order inside one IIFE — no bundler, no imports, every top-level name is shared.
 
 ```
-npm run build    # src/ → dist/hexball.html (publish this) + dist/hexball.test.html (test hooks, 8× speed)
-npm run dev      # rebuild on every save in src/
+npm start        # build + serve the installable app at http://localhost:8080 (service worker works on localhost)
+npm run build    # src/ → dist/: hexball.html (artifact), hexball.test.html (test hooks, 8× speed), hexball-offline.html, pwa/
+npm run dev      # rebuild on every save in src/ (with `npm run serve` alongside)
 npm run quick    # ~15 s: unit + behaviour lock + game-screen UI — run after each small change
 npm test         # ~30 s: everything, suites in parallel (unit, replay, ui, start, smoke) — before publishing
                  #   node test/run.mjs ui smoke   → just those suites; node test/smoke.mjs dist/hexball.test.html <name> → one test
@@ -19,12 +21,11 @@ npm run defence  # turn outcomes, React windows, contests, how the ball was won 
 npm run rhythm   # pacing/agency: spells, quiet turns, windows, contest odds, mini-games (seeded 1..N)  [DEF=respond PITCH=wide npm run rhythm -- 20]
 npm run unused   # top-level JS names and CSS classes nothing references
 npm run situations  # the shot set-ups (odds per aim spot + pictures) behind the Shot Situations page [-- outDir]
-npm run bundle -- 2.19  # the whole repo as one text file for the project (claude/hexball-src-v2.19.txt)
 npm run format   # prettier
 ```
 
-Playwright/Chromium are preinstalled in the Claude workspace (loaded via `createRequire`). `npm install` adds acorn and
-prettier.
+Setup: `npm install` (acorn, prettier, Playwright), then `npx playwright install chromium` once for the browser the
+suites drive. The suites last matched the game at v2.47; see the test-repair note in `design-notes.md` before relying on them.
 
 ## Modules (load order = build order)
 
@@ -98,13 +99,12 @@ Anything that animates or changes `S` belongs in playback/game; anything that dr
 
 ## Releasing (what a session ends with)
 
-1. `npm test` green; `npm run replay -- record` first if play changed on purpose.
-2. Publish `dist/hexball.html` to the "Hexball Tactics" artifact.
-3. `npm run bundle -- 2.x` and save it to the project as `claude/hexball-src-v2.x.txt`; keep v1.4, v1.13 and the last 3.
-4. A line in `design-notes.md` (Recent decisions) and save it to the project; this file too if the structure moved.
+Work on a branch; `main` is what's live (every push to `main` deploys `dist/pwa` to GitHub Pages via
+`.github/workflows/pages.yml`).
 
-## Publishing
-
-Publish `dist/hexball.html` to the "Hexball Tactics" artifact only after `npm test` passes (URL and exact steps in
-[CLAUDE.md](CLAUDE.md)). Then save a source bundle to
-the project (`claude/hexball-src-vX.txt`, whole repo) and add a line to `claude/design-notes.md`.
+1. `npm test` green; `npm run replay -- record` first if play changed on purpose (and commit the new baseline).
+2. A line in `design-notes.md` (Recent decisions); this file too if the structure moved. Bump `version` in
+   `package.json` (shown in the game under More).
+3. Commit, open a pull request, merge to `main` → the app updates on phones the next time they open it online.
+4. Optional, to look at a build on the phone before merging: publish `dist/hexball.html` to the "Hexball Tactics"
+   artifact (https://claude.ai/artifact/KibYkXqZ31B5LRBT4Zu4Ag); exact steps in [CLAUDE.md](CLAUDE.md).

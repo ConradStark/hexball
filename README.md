@@ -46,7 +46,7 @@ turn. A finished match is cleared.
 
 ## Develop
 
-- `npm install` (prettier, acorn) and Playwright for the tests and tools.
+- `npm install`, then `npx playwright install chromium` once (the browser the tests and tools drive).
 - `npm run dev` rebuilds on save (run `npm run serve` alongside it and reload); `npm run quick` / `npm test`; `npm run sim` / `npm run rhythm` for CPU-vs-CPU numbers.
 - `node tools/icons.mjs` re-renders the app icons from the start-screen logo (needs Playwright).
 - Design history and the rules as they stand: `design-notes.md`. Code guide: `ARCHITECTURE.md`.
