@@ -86,7 +86,11 @@ function initBoard() {
     const h = e.target.closest('[data-k]');
     if (!h) return;
     // v2.53: the tap on your own player was already handled by the drag code
-    if (Date.now() < dragSwallow && h.dataset.k === dragSwallowK) return;
+    // (only that one click: a quick second tap on the same hex is a real tap, e.g. dribble → space window → dribble)
+    if (Date.now() < dragSwallow && h.dataset.k === dragSwallowK) {
+      dragSwallow = 0;
+      return;
+    }
     const [c, r] = h.dataset.k.split(',').map(Number);
     onHex(c, r);
   });
