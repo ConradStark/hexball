@@ -6,7 +6,7 @@ was archived in the old claude.ai project (`claude/design-history.md`), not in t
 ## Where things are
 - **Code:** https://github.com/ConradStark/hexball — `main` is live; work on branches, merge by pull request. Code guide: `ARCHITECTURE.md`.
 - **Live game (installable app):** https://conradstark.github.io/hexball/ — every push to `main` deploys it (GitHub Pages).
-- **Artifact:** "Hexball Tactics" = **v2.66**: https://claude.ai/artifact/KibYkXqZ31B5LRBT4Zu4Ag (since 19 Nov; older Hexball Tactics artifacts are retired) — for checking a build on the phone before merging; steps in `CLAUDE.md`.
+- **Artifact:** "Hexball Tactics" = **v2.67**: https://claude.ai/artifact/KibYkXqZ31B5LRBT4Zu4Ag (since 19 Nov; older Hexball Tactics artifacts are retired) — for checking a build on the phone before merging; steps in `CLAUDE.md`.
 - **Setting up a fresh checkout:** `npm install`, `npx playwright install chromium`, `npm start` to play, `npm test` to check. Since v2.26.2 the page carries `[hidden]{display:none!important}` itself (without it every hidden panel showed and the game was stuck on "Pass the device").
 - **Design canvas:** "Hexball Look & Feel" (https://claude.ai/artifact/Gqmv496XymBv84RHjbDGkC) — every mock round so far: board directions, decision visuals, shot cone, chalk/pitch/header, pass arrows, tap-a-space window, pitch formats. New mocks go on it as a new row with a title note.
 - **Shot Situations** artifact: shot set-ups with odds per aim spot vs real-world xG ballparks (`npm run situations -- outDir`).
