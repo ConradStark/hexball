@@ -340,7 +340,10 @@ function keeperReachAt(h, F) {
       S.pos[o] &&
       hd(S.pos[o], h) === 1 &&
       keeperIn(o, h) &&
-      !(F.fromHex && same(h, F.fromHex)),
+      !(F.fromHex && same(h, F.fromHex)) &&
+      // a ground ball still on its way through his own hex: he waits for it and claims it there (75%), not a 20%
+      // dive one hex early that used up his contest (passEval already gave him the claim, not the reach)
+      !(F.kind !== 'lob' && F.path && F.path.slice(F.idx).some((x) => same(x, S.pos[o]))),
   );
 }
 async function land() {

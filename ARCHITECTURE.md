@@ -25,7 +25,7 @@ npm run format   # prettier
 ```
 
 Setup: `npm install` (acorn, prettier, Playwright), then `npx playwright install chromium` once for the browser the
-suites drive. The suites last matched the game at v2.47; see the test-repair note in `design-notes.md` before relying on them.
+suites drive. CI (`.github/workflows/test.yml`) runs `npm run quick` on every pull request and push to `main`.
 
 ## Modules (load order = build order)
 
